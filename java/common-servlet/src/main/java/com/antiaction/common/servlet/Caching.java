@@ -5,7 +5,7 @@
  * Window - Preferences - Java - Code Style - Code Templates
  */
 
-package com.antiaction.raptor.frontend;
+package com.antiaction.common.servlet;
 
 import java.io.IOException;
 
