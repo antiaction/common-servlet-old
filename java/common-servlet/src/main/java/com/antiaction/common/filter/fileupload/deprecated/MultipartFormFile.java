@@ -13,7 +13,7 @@
  *
  */
 
-package com.antiaction.common.filter.fileupload;
+package com.antiaction.common.filter.fileupload.deprecated;
 
 import java.io.IOException;
 import java.io.File;

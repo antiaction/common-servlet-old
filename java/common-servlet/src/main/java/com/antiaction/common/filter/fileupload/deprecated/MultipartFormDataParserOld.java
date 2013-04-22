@@ -5,7 +5,7 @@
  * Window - Preferences - Java - Code Style - Code Templates
  */
 
-package com.antiaction.common.filter.fileupload;
+package com.antiaction.common.filter.fileupload.deprecated;
 
 import java.io.File;
 import java.io.IOException;

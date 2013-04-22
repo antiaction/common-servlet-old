@@ -1,51 +1,33 @@
 /*
- * Dispatch Form Data.
- * Copyright (C) 2001, 2002  Nicholas Clarke
+ * Created on 10/04/2013
  *
- */
-
-/*
- * History:
- *
- * 05-May-2002 : First implementation.
- * 21-Jun-2003 : Moved to antiaction.com package.
- *
+ * TODO To change the template for this generated file go to
+ * Window - Preferences - Java - Code Style - Code Templates
  */
 
 package com.antiaction.common.filter.fileupload;
 
-import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.util.List;
 
-/**
- * Dispatch Form Data.
- *
- * @version 1.00
- * @author Nicholas Clarke <mayhem[at]antiaction[dot]com>
- */
-public class MultipartFormData implements IMultipartFormData {
+public class MultipartFormData {
 
-	StringBuffer tmpStrB;
+	public String contentDisposition;
 
-	public MultipartFormData() {
-		tmpStrB = new StringBuffer();
+	public String contentName;
+
+	protected ByteArrayOutputStream out;
+
+	public List files;
+
+	public OutputStream getOutputStream() {
+		out = new ByteArrayOutputStream();
+		return out;
 	}
 
-	public void write(int b) throws IOException {
-		tmpStrB.append( (char)b );
-	}
-
-	public void write(byte[] b, int off, int len) throws IOException {
-		while ( len > 0 ) {
-			tmpStrB.append( (char)b[ off++ ] );
-			--len;
-		}
-	}
-
-	public void close() throws IOException {
-	}
-
-	public String toString() {
-		return tmpStrB.toString();
+	public String getValue() {
+		return new String( out.toByteArray() );
 	}
 
 }

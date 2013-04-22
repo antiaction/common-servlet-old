@@ -7,11 +7,9 @@
 
 package com.antiaction.common.filter.fileupload;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -136,9 +134,15 @@ public class MultipartFormFilter implements Filter {
 				}
 				*/
 				InputStream in = req.getInputStream();
+				MultipartFormData formdata;
 				if ( MultipartFormDataParser.parseMultipartFormData( in, contentBoundary, parameters, files, tmpdir ) ) {
-					request = new FilteredRequest( req, parameters );
+					// debug
 					System.out.println( files.size() );
+					for ( int i=0; i<files.size(); ++i ) {
+						formdata = (MultipartFormData)files.get( i );
+						req.setAttribute( formdata.contentName, formdata );
+					}
+					request = new FilteredRequest( req, parameters );
 				}
 			}
 		}
@@ -148,12 +152,20 @@ public class MultipartFormFilter implements Filter {
 		}
 		finally {
 			if ( files != null ) {
-				MultipartFormFile formfile;
+				MultipartFormData formdata;
+				List formfiles;
+				MultipartFormDataFile formfile;
 				for ( int i=0; i<files.size(); ++i ) {
-					formfile = (MultipartFormFile)files.get( i );
-					System.out.println( formfile.getAbsolutePath() );
-					if ( !formfile.isClaimed() ) {
-						formfile.delete();
+					formdata = (MultipartFormData)files.get( i );
+					formfiles = formdata.files;
+					for ( int j=0; j<formfiles.size(); ++j ) {
+						formfile = (MultipartFormDataFile)formfiles.get( j );
+						System.out.println( formfile.file.getAbsolutePath() );
+						/*
+						if ( !formfile.isClaimed() ) {
+							formfile.file.delete();
+						}
+						*/
 					}
 				}
 			}
