@@ -5,7 +5,7 @@
  * Window - Preferences - Java - Code Style - Code Templates
  */
 
-package com.antiaction.common.servlet;
+package com.antiaction.common.filter;
 
 import java.io.IOException;
 
