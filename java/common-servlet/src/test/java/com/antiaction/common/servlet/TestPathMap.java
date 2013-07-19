@@ -5,7 +5,7 @@
  * Window - Preferences - Java - Code Style - Code Templates
  */
 
-package com.antiaction.mayhem.mailmanager;
+package com.antiaction.common.servlet;
 
 import java.util.ArrayList;
 import java.util.List;
