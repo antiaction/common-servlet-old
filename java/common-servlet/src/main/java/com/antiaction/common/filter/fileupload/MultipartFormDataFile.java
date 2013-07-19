@@ -17,6 +17,8 @@ import java.util.Random;
 
 public class MultipartFormDataFile {
 
+	private static String FORM_DATA_POSTFIX = "form-data-";
+
 	public String contentFilename;
 
 	public String contentType;
@@ -31,6 +33,8 @@ public class MultipartFormDataFile {
 
 	protected FileOutputStream out;
 
+	private boolean claimed;
+
 	public static MultipartFormDataFile getInstance(File tmpdir) throws IOException {
 		MultipartFormDataFile mpfdf = new MultipartFormDataFile();
 		Random random = new Random();
@@ -38,7 +42,7 @@ public class MultipartFormDataFile {
 		ctm = ctm.substring( ctm.length() - 16, ctm.length() );
 		String rand = "000000000000000" + Long.toHexString( random.nextLong() );
 		rand = rand.substring( rand.length() - 16, rand.length() );
-		String filename = "temp-formdata-" + ctm + "-" + rand;
+		String filename = FORM_DATA_POSTFIX + ctm + "-" + rand;
 		mpfdf.file  = new File( tmpdir, filename );
 		mpfdf.out = new FileOutputStream( mpfdf.file, false );
 		return mpfdf;
@@ -54,6 +58,22 @@ public class MultipartFormDataFile {
 
 	public InputStream getInputStream() throws IOException {
 		return new FileInputStream( file );
+	}
+
+	public void setClaimed(boolean b) {
+		claimed = b;
+	}
+
+	public boolean isClaimed() {
+		return claimed;
+	}
+
+	public void delete() {
+		if ( file != null && file.exists() && file.isFile() ) {
+			if ( !file.delete() ) {
+				file.deleteOnExit();
+			}
+		}
 	}
 
 }

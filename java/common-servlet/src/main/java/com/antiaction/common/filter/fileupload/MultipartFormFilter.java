@@ -10,6 +10,7 @@ package com.antiaction.common.filter.fileupload;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -27,21 +28,62 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
+import com.antiaction.common.io.RandomAccessFileInputStream;
 import com.antiaction.common.strings.Strings;
 
 public class MultipartFormFilter implements Filter {
 
-	/** FilterConfig used to obtaint ServletContext. */
+	private static String FORM_FILE_POSTFIX = "form-file-";
+
+	/** FilterConfig used to obtait ServletContext. */
 	private FilterConfig filterConfig;
 
 	/** Context temp dir. */
 	private File tmpdir;
 
-	private static int counter = 1;
+	/** Debug form data by saving the whole submitted form. */
+	private boolean bDebug = false;
+
+	/** Current number of saved debug forms. */
+	private static Integer counter = 1;
 
 	public final void init(FilterConfig filterConfig) throws ServletException {
 		this.filterConfig = filterConfig;
-		this.filterConfig.getServletContext().getAttribute( "javax.servlet.context.tempdir" );
+		String tmpdirStr = this.filterConfig.getInitParameter( "tmpdir" );
+		if ( tmpdirStr != null && tmpdirStr.length() > 0 ) {
+			tmpdir = new File( tmpdirStr );
+			check_tmpdir();
+		}
+		if ( tmpdir == null ) {
+			tmpdir = (File)this.filterConfig.getServletContext().getAttribute( "javax.servlet.context.tempdir" );
+			if ( tmpdir != null ) {
+				check_tmpdir();
+			}
+		}
+		if ( tmpdir == null ) {
+			tmpdirStr = System.getProperty( "java.io.tmpdir" );
+			if ( tmpdirStr != null && tmpdirStr.length() > 0 ) {
+				tmpdir = new File( tmpdirStr );
+				check_tmpdir();
+			}
+		}
+		String debugStr = this.filterConfig.getInitParameter( "debug" );
+		if ( debugStr != null && debugStr.length() > 0 ) {
+			if ( "true".equalsIgnoreCase( debugStr ) || "1".equals( debugStr ) ) {
+				bDebug = true;
+			}
+		}
+	}
+
+	private void check_tmpdir() {
+		if ( !tmpdir.exists() ) {
+			if ( !tmpdir.mkdirs() ) {
+				tmpdir = null;
+			}
+		}
+		else if ( !tmpdir.isDirectory() ) {
+			tmpdir = null;
+		}
 	}
 
 	public final void destroy() {
@@ -52,6 +94,7 @@ public class MultipartFormFilter implements Filter {
 		//HttpServletResponse resp = (HttpServletResponse)response;
 		//ServletContext servletContext = filterConfig.getServletContext();
 
+		RandomAccessFile raf = null;
 		List files = null;
 
 		if ( "POST".equals(req.getMethod()) || "PUT".equals(req.getMethod()) )  {
@@ -109,33 +152,31 @@ public class MultipartFormFilter implements Filter {
 
 			if ( ( contentType != null ) && ( contentType.startsWith( "multipart/form-data" ) ) && contentBoundary != null && contentBoundary.length() > 0 ) {
 
-				/*
-				ByteArrayOutputStream out = new ByteArrayOutputStream();
-				byte[] bytes = new byte[ 1024 ];
-				int read;
 				InputStream in = req.getInputStream();
-				while ( (read = in.read(bytes)) != -1 ) {
-					out.write( bytes, 0, read );
+
+				if ( bDebug ) {
+					int count;
+					synchronized ( counter ) {
+						count = counter++;
+					}
+
+					raf = new RandomAccessFile( FORM_FILE_POSTFIX + count, "rw" );
+					raf.seek( 0 );
+					raf.setLength( 0 );
+					byte[] bytes = new byte[ 8192 ];
+					int read;
+					while ( (read = in.read(bytes)) != -1 ) {
+						raf.write( bytes, 0, read );
+					}
+					raf.seek( 0 );
+					in = new RandomAccessFileInputStream( raf );
 				}
-				out.close();
 
-				RandomAccessFile raf = new RandomAccessFile( "form." + counter, "rw" );
-				raf.write( out.toByteArray() );
-				raf.close();
-
-				++counter;
-				*/
-
+				String charsetName = req.getCharacterEncoding();
 				Map parameters = new HashMap();
 				files = new ArrayList();
-				/*
-				if ( MultipartFormDataParserOld.parseMultipartFormData( req, contentBoundary, parameters, files, tmpdir ) ) {
-					request = new FilteredRequest( req, parameters );
-				}
-				*/
-				InputStream in = req.getInputStream();
 				MultipartFormData formdata;
-				if ( MultipartFormDataParser.parseMultipartFormData( in, contentBoundary, parameters, files, tmpdir ) ) {
+				if ( MultipartFormDataParser.parseMultipartFormData( in, contentBoundary, charsetName, 8192, parameters, files, tmpdir ) ) {
 					// debug
 					System.out.println( files.size() );
 					for ( int i=0; i<files.size(); ++i ) {
@@ -151,7 +192,15 @@ public class MultipartFormFilter implements Filter {
 			chain.doFilter( request, response );
 		}
 		finally {
-			if ( files != null ) {
+			if ( raf != null ) {
+				try {
+					raf.close();
+				}
+				catch (IOException e) {
+				}
+				raf = null;
+			}
+			if ( !bDebug && files != null ) {
 				MultipartFormData formdata;
 				List formfiles;
 				MultipartFormDataFile formfile;
@@ -160,12 +209,11 @@ public class MultipartFormFilter implements Filter {
 					formfiles = formdata.files;
 					for ( int j=0; j<formfiles.size(); ++j ) {
 						formfile = (MultipartFormDataFile)formfiles.get( j );
+						// debug
 						System.out.println( formfile.file.getAbsolutePath() );
-						/*
 						if ( !formfile.isClaimed() ) {
-							formfile.file.delete();
+							formfile.delete();
 						}
-						*/
 					}
 				}
 			}

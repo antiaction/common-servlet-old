@@ -9,6 +9,7 @@ package com.antiaction.common.filter.fileupload;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 public class MultipartFormData {
@@ -26,8 +27,8 @@ public class MultipartFormData {
 		return out;
 	}
 
-	public String getValue() {
-		return new String( out.toByteArray() );
+	public String getValue(String charsetName) throws UnsupportedEncodingException {
+		return out.toString( charsetName );
 	}
 
 }
