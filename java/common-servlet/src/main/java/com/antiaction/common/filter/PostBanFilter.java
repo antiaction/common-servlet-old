@@ -13,8 +13,6 @@
 
 package com.antiaction.common.filter;
 
-import com.antiaction.common.strings.Strings;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -27,6 +25,8 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.antiaction.common.servlet.StringUtils;
 
 /**
  * Experimental POST ban filter.
@@ -66,7 +66,7 @@ public class PostBanFilter implements Filter {
 	public byte[] ipBytes(String ipStr) {
 		byte[] ipBytes = null;
 		if ( ipStr != null && ipStr.length() > 0 ) {
-			List list = Strings.splitString( ipStr, "." );
+			List list = StringUtils.splitString( ipStr, "." );
 			if ( list.size() == 4 ) {
 				try {
 					ipBytes = new byte[ 4 ];

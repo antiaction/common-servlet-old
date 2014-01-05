@@ -111,6 +111,7 @@ public class MultipartFormDataParser {
 		int aIdx = 0;
 		int position = 0;
 		int limit = 0;
+		int c;
 
 		int header = 0;
 
@@ -167,7 +168,7 @@ public class MultipartFormDataParser {
 						}
 						break;
 					case S_BOUNDARY_NEXT_OR_END:
-						int c = bytes[ position++ ] & 255;
+						c = bytes[ position++ ] & 255;
 						if ( c == '\r') {
 							state = S_BOUNDARY_NEXT;
 							aIdx = 1;
@@ -592,7 +593,7 @@ public class MultipartFormDataParser {
 							switch ( mixed ) {
 							case SM_NONE:
 								if ( mpfd.files == null ) {
-									parameters.put( mpfd.contentName, mpfd.getValue( charsetName) );
+									parameters.put( mpfd.contentName, mpfd.getValue( charsetName ) );
 								}
 								else {
 									files.add( mpfd );

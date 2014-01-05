@@ -1,0 +1,176 @@
+------WebKitFormBoundaryQKfvueCtyOWOQqMF
+Content-Disposition: form-data; name="filedata"; filename="pom.xml"
+Content-Type: text/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>dk.kb</groupId>
+  <artifactId>dab</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+
+  <packaging>jar</packaging>
+
+  <name>dab webapp</name>
+  <description>DAB WebApp</description>
+  <url>http://www.kb.dk/blablabla</url>
+
+  <inceptionYear>2013</inceptionYear>
+
+  <developers>
+    <developer>
+      <name>Nicholas Clarke</name>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <email>nicl@kb.dk</email>
+      <organization>Netarkivet.dk / Det Kongelige Bibliotek</organization>
+      <organizationUrl>http://www.kb.dk</organizationUrl>
+    </developer>
+  </developers>
+
+  <repositories>
+    <repository>
+      <id>java-net</id>
+      <name>java.net repository</name>
+      <url>https://maven.java.net/content/groups/public</url>
+    </repository>
+  </repositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.3</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.antiaction</groupId>
+      <artifactId>common</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>C:\Data\[Java-work]\workspace\common\dist\lib\antiaction-commons.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.antiaction</groupId>
+      <artifactId>commom-servlet</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>C:\Data\[Java-work]\workspace\common-servlet\target\common-servlet-0.1.0-SNAPSHOT.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.antiaction</groupId>
+      <artifactId>commom-html</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>C:\Data\[Java-work]\workspace\common-html\target\common-html-0.1.0-SNAPSHOT.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.antiaction</groupId>
+      <artifactId>commom-template-engine</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>C:\Data\[Java-work]\workspace\common-template-engine\target\common-template-engine-0.1.0-SNAPSHOT.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.antiaction</groupId>
+      <artifactId>mayhem-mailmanager</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+      <scope>system</scope>
+      <systemPath>C:\Data\[Java-work]\workspace\mayhem-mailmanager\target\mayhem-mailmanager-0.1.0-SNAPSHOT.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>javax.mail-api</artifactId>
+      <version>1.4.7</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.7</version>
+    </dependency>
+    <dependency>
+      <groupId>dk.kb.pidhandler</groupId>
+      <artifactId>pid-handler</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/pid-handler-1.0.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>handle.net</groupId>
+      <artifactId>hcj</artifactId>
+      <version>7</version>
+      <scope>system</scope>
+      <systemPath>${basedir}/lib/handle-client.jar</systemPath>
+    </dependency>
+    <dependency>
+  	<groupId>log4j</groupId>
+  	  <artifactId>log4j</artifactId>
+      <version>1.2.16</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <excludeScope>provided</excludeScope>
+              <!--excludeTransitive>true</excludeTransitive-->
+              <!--includeGroupIds>com.antiaction</includeGroupIds-->
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+<profiles>
+    <profile>
+      <id>alternative</id>
+      <properties>
+        <maven.test.failure.ignore>true</maven.test.failure.ignore>
+      </properties>
+    </profile>
+  </profiles>
+</project>
+
+------WebKitFormBoundaryQKfvueCtyOWOQqMF
+Content-Disposition: form-data; name="filename"
+
+
+------WebKitFormBoundaryQKfvueCtyOWOQqMF--

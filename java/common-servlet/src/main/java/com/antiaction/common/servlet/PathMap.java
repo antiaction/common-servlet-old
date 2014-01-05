@@ -11,8 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.antiaction.common.strings.Strings;
-
 public class PathMap<T> {
 
 	protected Map<String, PathMap<T>> pathMap;
@@ -38,7 +36,7 @@ public class PathMap<T> {
 		PathMap<T> parent = this;
 		PathMap<T> current;
 
-		List<String> pathList = Strings.splitString( pathStr, "/" );
+		List<String> pathList = StringUtils.splitString( pathStr, "/" );
 		String path;
 
 		boolean b = true;
@@ -96,7 +94,7 @@ public class PathMap<T> {
 		PathMap<T> parent = this;
 		PathMap<T> current;
 
-		List<String> pathList = Strings.splitString( pathStr, "/" );
+		List<String> pathList = StringUtils.splitString( pathStr, "/" );
 		String path;
 
 		numerics.clear();

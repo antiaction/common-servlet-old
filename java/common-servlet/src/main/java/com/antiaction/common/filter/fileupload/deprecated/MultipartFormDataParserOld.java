@@ -17,7 +17,7 @@ import java.util.Random;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 
-import com.antiaction.common.strings.Strings;
+import com.antiaction.common.servlet.StringUtils;
 
 public class MultipartFormDataParserOld {
 
@@ -128,7 +128,7 @@ public class MultipartFormDataParserOld {
 										if ( idx != -1 ) {
 											headerStr = tmpStr.substring( 0, idx ).trim().toLowerCase();		// check: trim?
 											valueStr = tmpStr.substring( idx + 1, tmpStr.length() ).trim();
-											tmpArr = Strings.splitString( valueStr, ";" );
+											tmpArr = StringUtils.splitString( valueStr, ";" );
 											if ( ( tmpArr != null ) && ( !tmpArr.isEmpty() ) ) {
 												/*
 												 * Content-Disposition

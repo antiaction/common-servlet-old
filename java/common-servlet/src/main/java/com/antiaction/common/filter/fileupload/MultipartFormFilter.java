@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -28,10 +30,12 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import com.antiaction.common.io.RandomAccessFileInputStream;
-import com.antiaction.common.strings.Strings;
+import com.antiaction.common.servlet.StringUtils;
 
 public class MultipartFormFilter implements Filter {
+
+    /** Logging mechanism. */
+	private static Logger logger = Logger.getLogger( MultipartFormFilter.class.getName() );
 
 	private static String FORM_FILE_POSTFIX = "form-file-";
 
@@ -73,6 +77,8 @@ public class MultipartFormFilter implements Filter {
 				bDebug = true;
 			}
 		}
+		logger.log( Level.INFO, "tmpdir: " + tmpdir.getPath() );
+		logger.log( Level.INFO, "debug: " + bDebug );
 	}
 
 	private void check_tmpdir() {
@@ -94,96 +100,116 @@ public class MultipartFormFilter implements Filter {
 		//HttpServletResponse resp = (HttpServletResponse)response;
 		//ServletContext servletContext = filterConfig.getServletContext();
 
+		InputStream in = null;
 		RandomAccessFile raf = null;
 		List files = null;
 
-		if ( "POST".equals(req.getMethod()) || "PUT".equals(req.getMethod()) )  {
-			/*
-			 * Content-Type.
-			 * Content-Type: text/html; charset=iso-8859-1
-			 * Content-Type: application/x-www-form-urlencoded
-			 * Content-Type: multipart/form-data; boundary=---------------------------7d2291115040c
-			 */
+		if ( "POST".equals( req.getMethod() ) )  {
+			try {
+				/*
+				 * Content-Type.
+				 * Content-Type: text/html; charset=iso-8859-1
+				 * Content-Type: application/x-www-form-urlencoded
+				 * Content-Type: multipart/form-data; boundary=---------------------------7d2291115040c
+				 */
 
-			String tmpStr;
-			int idx;
-			List tmpArr;
-			String attStr;
-			String valStr;
+				String tmpStr;
+				int idx;
+				List tmpArr;
+				String attStr;
+				String valStr;
 
-			String contentTypeFull;
-			String contentType = null;
-			String contentBoundary = null;
-			String contentCharset = null;
-			//int contentLength;
-			//Charset setCharset = null;
+				String contentTypeFull;
+				String contentType = null;
+				String contentBoundary = null;
+				String contentCharset = null;
+				//int contentLength;
+				//Charset setCharset = null;
 
-			contentTypeFull = req.getHeader( "content-type" );
-			if ( ( contentTypeFull != null ) && ( contentTypeFull.length() > 0 ) ) {
-				tmpArr = Strings.splitString( contentTypeFull, ";" );
-				if ( ( tmpArr != null ) && ( tmpArr.size() > 0 ) ) {
-					contentType = ((String)tmpArr.get( 0 )).trim().toLowerCase();
-					for ( int i=1; i<tmpArr.size(); ++i ) {
-						tmpStr = (String)tmpArr.get( i );
-						idx = tmpStr.indexOf( '=' );
-						if ( idx != -1 ) {
-							attStr = tmpStr.substring( 0, idx ).trim().toLowerCase();
-							valStr = tmpStr.substring( idx + 1, tmpStr.length() ).trim();
-							if ( attStr.equals( "boundary" ) ) {
-								contentBoundary = valStr;
-							}
-							else if ( attStr.equals( "charset" ) ) {
-								contentCharset = valStr;
+				contentTypeFull = req.getHeader( "content-type" );
+				if ( ( contentTypeFull != null ) && ( contentTypeFull.length() > 0 ) ) {
+					tmpArr = StringUtils.splitString( contentTypeFull, ";" );
+					if ( ( tmpArr != null ) && ( tmpArr.size() > 0 ) ) {
+						contentType = ((String)tmpArr.get( 0 )).trim().toLowerCase();
+						for ( int i=1; i<tmpArr.size(); ++i ) {
+							tmpStr = (String)tmpArr.get( i );
+							idx = tmpStr.indexOf( '=' );
+							if ( idx != -1 ) {
+								attStr = tmpStr.substring( 0, idx ).trim().toLowerCase();
+								valStr = tmpStr.substring( idx + 1, tmpStr.length() ).trim();
+								if ( attStr.equals( "boundary" ) ) {
+									contentBoundary = valStr;
+								}
+								else if ( attStr.equals( "charset" ) ) {
+									contentCharset = valStr;
+								}
 							}
 						}
 					}
 				}
-			}
 
-			// debug
-			System.out.println( "Upload filter..." );
-			System.out.println( " " + contentTypeFull );
-			System.out.println( " " + contentType );
-			System.out.println( " " + contentBoundary );
+				logger.log( Level.INFO, req.getMethod() + " - " + contentTypeFull );
 
-			/*
-			 * Filter.
-			 */
+				/*
+				 * Filter.
+				 */
 
-			if ( ( contentType != null ) && ( contentType.startsWith( "multipart/form-data" ) ) && contentBoundary != null && contentBoundary.length() > 0 ) {
-
-				InputStream in = req.getInputStream();
-
-				if ( bDebug ) {
-					int count;
-					synchronized ( counter ) {
-						count = counter++;
+				if ( contentType != null ) {
+					if ( contentType.startsWith( "application/x-www-form-urlencoded" ) ) {
+						in = req.getInputStream();
+						String charsetName = req.getCharacterEncoding();
+						Map parameters = new HashMap();
+						if ( UrlEncodedFormDataParser.parseUrlEncodedFormData( in, charsetName, 8192, parameters ) ) {
+							request = new FilteredRequest( req, parameters );
+						}
 					}
+					else if ( contentType.startsWith( "multipart/form-data" ) && contentBoundary != null && contentBoundary.length() > 0 ) {
+						in = req.getInputStream();
+						if ( bDebug ) {
+							int count;
+							synchronized ( counter ) {
+								count = counter++;
+							}
+							raf = new RandomAccessFile( new File(tmpdir, FORM_FILE_POSTFIX + count), "rw" );
+							raf.seek( 0 );
+							raf.setLength( 0 );
+							byte[] bytes = new byte[ 8192 ];
+							int read;
+							while ( (read = in.read(bytes)) != -1 ) {
+								raf.write( bytes, 0, read );
+							}
+							raf.seek( 0 );
+							in = new RandomAccessFileInputStream( raf );
+						}
 
-					raf = new RandomAccessFile( FORM_FILE_POSTFIX + count, "rw" );
-					raf.seek( 0 );
-					raf.setLength( 0 );
-					byte[] bytes = new byte[ 8192 ];
-					int read;
-					while ( (read = in.read(bytes)) != -1 ) {
-						raf.write( bytes, 0, read );
+						String charsetName = req.getCharacterEncoding();
+						Map parameters = new HashMap();
+						files = new ArrayList();
+						MultipartFormData formdata;
+						if ( MultipartFormDataParser.parseMultipartFormData( in, contentBoundary, charsetName, 8192, parameters, files, tmpdir ) ) {
+							// debug
+							System.out.println( files.size() );
+							for ( int i=0; i<files.size(); ++i ) {
+								formdata = (MultipartFormData)files.get( i );
+								req.setAttribute( formdata.contentName, formdata );
+							}
+							request = new FilteredRequest( req, parameters );
+						}
 					}
-					raf.seek( 0 );
-					in = new RandomAccessFileInputStream( raf );
 				}
-
-				String charsetName = req.getCharacterEncoding();
-				Map parameters = new HashMap();
-				files = new ArrayList();
-				MultipartFormData formdata;
-				if ( MultipartFormDataParser.parseMultipartFormData( in, contentBoundary, charsetName, 8192, parameters, files, tmpdir ) ) {
-					// debug
-					System.out.println( files.size() );
-					for ( int i=0; i<files.size(); ++i ) {
-						formdata = (MultipartFormData)files.get( i );
-						req.setAttribute( formdata.contentName, formdata );
+			}
+			catch (Throwable t) {
+				logger.log( Level.SEVERE, t.toString(), t );
+			}
+			finally {
+				if ( in != null ) {
+					try {
+						in.close();
 					}
-					request = new FilteredRequest( req, parameters );
+					catch (IOException e) {
+						logger.log( Level.SEVERE, e.toString(), e );
+					}
+					in = null;
 				}
 			}
 		}
@@ -197,6 +223,7 @@ public class MultipartFormFilter implements Filter {
 					raf.close();
 				}
 				catch (IOException e) {
+					logger.log( Level.SEVERE, e.toString(), e );
 				}
 				raf = null;
 			}
@@ -209,8 +236,6 @@ public class MultipartFormFilter implements Filter {
 					formfiles = formdata.files;
 					for ( int j=0; j<formfiles.size(); ++j ) {
 						formfile = (MultipartFormDataFile)formfiles.get( j );
-						// debug
-						System.out.println( formfile.file.getAbsolutePath() );
 						if ( !formfile.isClaimed() ) {
 							formfile.delete();
 						}

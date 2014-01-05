@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-import com.antiaction.common.strings.Strings;
+import com.antiaction.common.servlet.StringUtils;
 
 /**
  * Servlet Filter to set cache enable or disable headers based on requested resource extension. 
@@ -51,7 +51,7 @@ public class CacheControlFilter implements Filter {
 
 		extStr = this.filterConfig.getInitParameter( "cache.ext" );
 		if ( extStr != null && extStr.length() > 0 ) {
-			extList = Strings.splitString( extStr.toLowerCase(), "," );
+			extList = StringUtils.splitString( extStr.toLowerCase(), "," );
 			if ( extList != null && extList.size() > 0 ) {
 				for ( int i=0; i<extList.size(); ++i ) {
 					ext = extList.get( i ).trim();
@@ -62,7 +62,7 @@ public class CacheControlFilter implements Filter {
 
 		extStr = this.filterConfig.getInitParameter( "nocache.ext" );
 		if ( extStr != null && extStr.length() > 0 ) {
-			extList = Strings.splitString( extStr.toLowerCase(), "," );
+			extList = StringUtils.splitString( extStr.toLowerCase(), "," );
 			if ( extList != null && extList.size() > 0 ) {
 				for ( int i=0; i<extList.size(); ++i ) {
 					ext = extList.get( i ).trim();
