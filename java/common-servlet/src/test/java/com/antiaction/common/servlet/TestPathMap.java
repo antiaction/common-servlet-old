@@ -306,6 +306,10 @@ public class TestPathMap {
 		Assert.assertEquals( new Integer( 7 ), action );
 		Assert.assertEquals( 1, numerics.size() );
 		Assert.assertEquals( new Integer( 45 ), numerics.get( 0 ) );
+
+		action = pathMap.get( "domain/46/account/", numerics );
+		Assert.assertEquals( new Integer( 7 ), action );
+		Assert.assertEquals( 1, numerics.size() );
 	}
 
 	public static void printarray(List<Integer> numerics) {

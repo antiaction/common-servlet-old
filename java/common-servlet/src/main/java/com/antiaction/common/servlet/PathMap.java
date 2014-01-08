@@ -131,6 +131,9 @@ public class PathMap<T> {
 				else {
 					if ( idx == pathList.size() ) {
 						action = parent.numericAction;
+						if ( action == null) {
+							action = parent.wildcardAction;
+						}
 					}
 					else {
 						// debug
