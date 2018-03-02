@@ -17,7 +17,9 @@ public class PathMap<T> {
 
 	protected PathMap<T> numericMap;
 
-	protected T numericAction;
+	protected PathMap<T> stringMap;
+
+	protected T action;
 
 	protected T wildcardAction;
 
@@ -47,15 +49,27 @@ public class PathMap<T> {
 				if ( path.length() > 0 ) {
 					if ( "*".equals( path ) ) {
 						if ( idx < pathList.size() || parent.wildcardAction != null ) {
-							throw new IllegalArgumentException();
+							throw new IllegalArgumentException( "Wildcards can only be used at the end and only once per path!" );
 						}
 						parent.wildcardAction = action;
 					}
-					else if ( "<numeric>".compareTo( path ) == 0 ) {
+					else if ( "<numeric>".compareTo( path ) == 0 || ":numeric".compareTo( path ) == 0 ) {
+						if ( parent.stringMap != null ) {
+							throw new IllegalArgumentException( "Unsupported to have both numeric and string definitions for the same path map elements!" );
+						}
 						if ( parent.numericMap == null ) {
 							parent.numericMap = new PathMap<T>();
 						}
 						parent = parent.numericMap;
+					}
+					else if ( "<string>".compareTo( path ) == 0 || ":string".compareTo( path ) == 0 ) {
+						if ( parent.numericMap != null ) {
+							throw new IllegalArgumentException( "Unsupported to have both numeric and string definitions for the same path map elements!" );
+						}
+						if ( parent.stringMap == null ) {
+							parent.stringMap = new PathMap<T>();
+						}
+						parent = parent.stringMap;
 					}
 					else {
 						current = parent.pathMap.get( path );
@@ -68,7 +82,7 @@ public class PathMap<T> {
 				}
 				else {
 					if ( idx == pathList.size() ) {
-						parent.numericAction = action;
+						parent.action = action;
 					}
 					else {
 						throw new IllegalArgumentException();
@@ -81,7 +95,7 @@ public class PathMap<T> {
 		}
 	}
 
-	public T get(String pathStr, List<Integer> numerics) {
+	public T get(String pathStr, List<Long> longList, List<String> stringList) {
 		if ( pathStr == null ) {
 			return null;
 		}
@@ -97,7 +111,8 @@ public class PathMap<T> {
 		List<String> pathList = StringUtils.splitString( pathStr, "/" );
 		String path;
 
-		numerics.clear();
+		longList.clear();
+		stringList.clear();
 
 		boolean b = true;
 		int idx = 0;
@@ -112,13 +127,17 @@ public class PathMap<T> {
 					else {
 						if ( parent.numericMap != null ) {
 							try {
-								int numeric = Integer.parseInt( path );
-								numerics.add( numeric );
+								long numeric = Long.parseLong( path );
+								longList.add( numeric );
 								parent = parent.numericMap;
 							}
 							catch (NumberFormatException e) {
 								b = false;
 							}
+						}
+						else if ( parent.stringMap != null ) {
+							stringList.add( path );
+							parent = parent.stringMap;
 						}
 						else {
 							b = false;
@@ -130,7 +149,7 @@ public class PathMap<T> {
 				}
 				else {
 					if ( idx == pathList.size() ) {
-						action = parent.numericAction;
+						action = parent.action;
 						if ( action == null) {
 							action = parent.wildcardAction;
 						}

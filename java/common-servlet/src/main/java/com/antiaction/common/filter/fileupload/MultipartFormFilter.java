@@ -95,6 +95,35 @@ public class MultipartFormFilter implements Filter {
 	public final void destroy() {
 	}
 
+	/**
+	 * Closes inputstream before method returns.
+	 * @param in
+	 * @return
+	 * @throws IOException
+	 */
+	public RandomAccessFile debugInputStream(InputStream in) throws IOException {
+		RandomAccessFile raf = null;
+		try {
+			int count;
+			synchronized ( counter ) {
+				count = counter++;
+			}
+			raf = new RandomAccessFile( new File(tmpdir, FORM_FILE_POSTFIX + count), "rw" );
+			raf.seek( 0 );
+			raf.setLength( 0 );
+			byte[] bytes = new byte[ 8192 ];
+			int read;
+			while ( (read = in.read(bytes)) != -1 ) {
+				raf.write( bytes, 0, read );
+			}
+			raf.seek( 0 );
+		}
+		finally {
+			in.close();
+		}
+		return raf;
+	}
+
 	public final void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest req = (HttpServletRequest)request;
 		//HttpServletResponse resp = (HttpServletResponse)response;
@@ -157,31 +186,25 @@ public class MultipartFormFilter implements Filter {
 				if ( contentType != null ) {
 					if ( contentType.startsWith( "application/x-www-form-urlencoded" ) ) {
 						in = req.getInputStream();
+						if ( bDebug ) {
+							raf = debugInputStream( in );
+							in = new RandomAccessFileInputStream( raf );
+						}
 						String charsetName = req.getCharacterEncoding();
 						Map parameters = new HashMap();
 						if ( UrlEncodedFormDataParser.parseUrlEncodedFormData( in, charsetName, 8192, parameters ) ) {
 							request = new FilteredRequest( req, parameters );
 						}
+						else {
+							logger.log( Level.SEVERE, "Failed to parse application/x-www-form-urlencoded!" );
+						}
 					}
 					else if ( contentType.startsWith( "multipart/form-data" ) && contentBoundary != null && contentBoundary.length() > 0 ) {
 						in = req.getInputStream();
 						if ( bDebug ) {
-							int count;
-							synchronized ( counter ) {
-								count = counter++;
-							}
-							raf = new RandomAccessFile( new File(tmpdir, FORM_FILE_POSTFIX + count), "rw" );
-							raf.seek( 0 );
-							raf.setLength( 0 );
-							byte[] bytes = new byte[ 8192 ];
-							int read;
-							while ( (read = in.read(bytes)) != -1 ) {
-								raf.write( bytes, 0, read );
-							}
-							raf.seek( 0 );
+							raf = debugInputStream( in );
 							in = new RandomAccessFileInputStream( raf );
 						}
-
 						String charsetName = req.getCharacterEncoding();
 						Map parameters = new HashMap();
 						files = new ArrayList();
@@ -194,6 +217,9 @@ public class MultipartFormFilter implements Filter {
 								req.setAttribute( formdata.contentName, formdata );
 							}
 							request = new FilteredRequest( req, parameters );
+						}
+						else {
+							logger.log( Level.SEVERE, "Failed to parse multipart/form-data!" );
 						}
 					}
 				}

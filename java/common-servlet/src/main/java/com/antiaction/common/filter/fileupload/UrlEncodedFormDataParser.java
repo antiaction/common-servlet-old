@@ -50,7 +50,7 @@ public class UrlEncodedFormDataParser {
 		int c;
 
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		int sPos;
+		int sPos = 0;
 		int hIdx = 0;
 		int hex = 0;
 
@@ -86,11 +86,13 @@ public class UrlEncodedFormDataParser {
 								++position;
 								state = S_ESCAPED;
 								rState = S_NAME;
-								hIdx = 0;
+								hIdx = 2;
 								break;
 							case '=':
 								bout.write( bytes, sPos, position - sPos );
 								name = bout.toString( charsetName );
+								// debug
+								//System.out.println( name );
 								++position;
 								bout.reset();
 								state = S_VALUE;
@@ -119,7 +121,7 @@ public class UrlEncodedFormDataParser {
 								++position;
 								state = S_ESCAPED;
 								rState = S_VALUE;
-								hIdx = 0;
+								hIdx = 2;
 								break;
 							case '&':
 								bout.write( bytes, sPos, position - sPos );
@@ -131,10 +133,12 @@ public class UrlEncodedFormDataParser {
 										parameters.put( name, values );
 									}
 									values.add( value );
+									// debug
+									//System.out.println( value );
 								}
 								bout.reset();
 								sPos = ++position;
-								state = S_VALUE;
+								state = S_NAME;
 								break;
 							default:
 								++position;
@@ -143,25 +147,28 @@ public class UrlEncodedFormDataParser {
 						}
 						break;
 					case S_ESCAPED:
-						c = bytes[ position++ ] & 255;
-						if ( hIdx == 0 ) {
-							c = asciiHexTab[ c ];
-							if ( c >= 0 ) {
-								hex = c << 4;
+						while ( bValid && position < limit && state == S_ESCAPED ) {
+							c = bytes[ position++ ] & 255;
+							--hIdx;
+							if ( hIdx > 0 ) {
+								c = asciiHexTab[ c ];
+								if ( c >= 0 ) {
+									hex = c << 4;
+								}
+								else {
+									bValid = false;
+								}
 							}
 							else {
-								bValid = false;
-							}
-						}
-						else {
-							c = asciiHexTab[ c ];
-							if ( c >= 0 ) {
-								hex |= c;
-								bout.write( hex );
-								state = rState;
-							}
-							else {
-								bValid = false;
+								c = asciiHexTab[ c ];
+								if ( c >= 0 ) {
+									hex |= c;
+									bout.write( hex );
+									state = rState;
+								}
+								else {
+									bValid = false;
+								}
 							}
 						}
 						break;
@@ -173,6 +180,29 @@ public class UrlEncodedFormDataParser {
 			else {
 				bLoop = false;
 			}
+		}
+		switch ( state ) {
+		case S_NAME:
+		case S_ESCAPED:
+			bValid = false;
+			break;
+		case S_VALUE:
+			if ( name.length() > 0 ) {
+				if ( sPos < position ) {
+					bout.write( bytes, sPos, position - sPos );
+					sPos = position;
+				}
+				value = bout.toString( charsetName );
+				values = (List)parameters.get( name );
+				if ( values == null ) {
+					values = new ArrayList();
+					parameters.put( name, values );
+				}
+				values.add( value );
+				// debug
+				//System.out.println( value );
+			}
+			break;
 		}
 		return bValid;
 	}
@@ -187,6 +217,9 @@ public class UrlEncodedFormDataParser {
      * Initialize ASCII hex table.
      */
     static {
+    	for ( int i=0; i<asciiHexTab.length; ++i ) {
+    		asciiHexTab[ i ] = -1;
+    	}
         String hex = "0123456789abcdef";
         for ( int i=0; i<asciiHexTab.length; ++i ) {
             asciiHexTab[ i ] = hex.indexOf( i );

@@ -14,29 +14,36 @@
 
 package com.antiaction.common.filter;
 
+import java.awt.Container;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.MediaTracker;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.MediaTracker;
-import java.awt.Container;
-import java.awt.image.BufferedImage;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.io.InputStream;
+import java.util.Iterator;
 
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGEncodeParam;
-
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+/*
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGEncodeParam;
+*/
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -187,12 +194,27 @@ public class ImageFilter implements Filter {
 		 */
 		try {
 			BufferedOutputStream out = new BufferedOutputStream( new FileOutputStream( outfile ) );
+			/*
 			JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder( out );
 			JPEGEncodeParam param = encoder.getDefaultJPEGEncodeParam( destImage );
-			quality = Math.max( 0, Math.min( quality, 100 ) );
+		    quality = Math.max( 0, Math.min( quality, 100 ) );
 			param.setQuality( (float)quality / 100.0f, false );
 			encoder.setJPEGEncodeParam( param );
 			encoder.encode( destImage );
+			*/
+			/*
+		    ImageIO.write(destImage, "jpg", out);
+		    */
+		    ImageOutputStream  ios =  ImageIO.createImageOutputStream( out );
+		    Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName( "jpeg" );
+		    ImageWriter writer = iter.next();
+		    ImageWriteParam iwp = writer.getDefaultWriteParam();
+		    iwp.setCompressionMode( ImageWriteParam.MODE_EXPLICIT );
+		    quality = Math.max( 0, Math.min( quality, 100 ) );
+		    iwp.setCompressionQuality( (float)quality / 100.0f );
+		    writer.setOutput( ios );
+		    writer.write( null, new IIOImage( destImage, null, null), iwp );
+		    writer.dispose();
 			out.close(); 
 		}
 		catch (FileNotFoundException e) {
