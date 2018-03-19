@@ -4,11 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.antiaction</groupId>
-		<artifactId>parent</artifactId>
-		<version>1-SNAPSHOT</version>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
 	</parent>
 
+	<groupId>com.antiaction</groupId>
 	<artifactId>common-servlet</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
@@ -35,31 +36,6 @@
 			<organizationUrl>http://www.antiaction.com</organizationUrl>
 		</developer>
 	</developers>
-
-	<repositories>
-		<repository>
-			<id>antiaction-snapshots</id>
-			<name>Antiaction Snapshots Repository</name>
-			<url>https://www.antiaction.com:8443/repository/snapshots/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>antiaction-releases</id>
-			<name>Antiaction Releases Repository</name>
-			<url>https://www.antiaction.com:8443/repository/releases/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
-	</repositories>
 
 	<dependencies>
 		<dependency>
